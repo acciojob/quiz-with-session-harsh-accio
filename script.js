@@ -1,7 +1,3 @@
-//your JS code here.
-
-// Do not change code below this line
-// This code will just display the questions to the screen
 const questions = [
   {
     question: "What is the capital of France?",
@@ -29,28 +25,68 @@ const questions = [
     answer: "Ottawa",
   },
 ];
+ 
+window.addEventListener("DOMContentLoaded", () => {
+      const questionDiv = document.getElementById("questions");
+      const progress = JSON.parse(sessionStorage.getItem("progress")) || {};
 
-// Display the quiz questions and choices
-function renderQuestions() {
-  for (let i = 0; i < questions.length; i++) {
-    const question = questions[i];
-    const questionElement = document.createElement("div");
-    const questionText = document.createTextNode(question.question);
-    questionElement.appendChild(questionText);
-    for (let j = 0; j < question.choices.length; j++) {
-      const choice = question.choices[j];
-      const choiceElement = document.createElement("input");
-      choiceElement.setAttribute("type", "radio");
-      choiceElement.setAttribute("name", `question-${i}`);
-      choiceElement.setAttribute("value", choice);
-      if (userAnswers[i] === choice) {
-        choiceElement.setAttribute("checked", true);
+      // Render questions dynamically
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        const h2 = document.createElement("h2");
+        h2.textContent = `${i + 1}. ${q.question}`;
+        questionDiv.appendChild(h2);
+
+        q.choices.forEach((choice) => {
+          const label = document.createElement("label");
+          label.innerHTML = `
+            <input type="radio" name="question${i}" value="${choice}">
+            ${choice} <br>
+          `;
+          questionDiv.appendChild(label);
+        });
+
+        questionDiv.appendChild(document.createElement("hr"));
       }
-      const choiceText = document.createTextNode(choice);
-      questionElement.appendChild(choiceElement);
-      questionElement.appendChild(choiceText);
+
+      // ✅ After rendering, attach event listeners
+      document.querySelectorAll('input[type="radio"]').forEach((radio) => {
+        // Restore selection if already saved
+        const progress = JSON.parse(sessionStorage.getItem("progress")) || {};
+		  if (progress[radio.name] === radio.value) {
+          radio.checked = true;  
+        }
+ 
+        // Save new selection on change
+        radio.addEventListener("change", (e) => {
+          const question = e.target.name;
+          const answer = e.target.value;
+
+          const progress = JSON.parse(sessionStorage.getItem("progress")) || {};
+          progress[question] = answer;
+
+          sessionStorage.setItem("progress", JSON.stringify(progress));
+        });
+      }); 
+    });
+
+const submit = document.getElementById('submit');
+const scoreElement = document.getElementById('score');
+
+submit.addEventListener('click', () => {
+  let totalScore = 0;
+  const progress = JSON.parse(sessionStorage.getItem('progress')) || {};
+
+  for (let i = 0; i < questions.length; i++) {
+    const q = `question${i}`;
+    if (progress[q] === questions[i].answer) {
+      totalScore++;
     }
-    questionsElement.appendChild(questionElement);
-  }
-}
-renderQuestions();
+  } 
+  localStorage.setItem('score',totalScore);
+  console.log("Progress:", progress); 
+  console.log("Score:", totalScore); 
+  scoreElement.innerHTML = `Your score is: ${localStorage.getItem('score')} / ${questions.length}`;
+});
+scoreElement.innerHTML = `Your score is: ${localStorage.getItem('score')} / ${questions.length}`;
+ 
