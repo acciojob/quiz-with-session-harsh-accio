@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quiz with Progress</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cypress-Compatible Quiz</title>
 </head>
 <body>
   <div id="questions"></div>
@@ -24,21 +24,19 @@
       const submit = document.getElementById("submit");
       const scoreElement = document.getElementById("score");
 
-      // Get saved progress
+      // Load saved progress
       const progress = JSON.parse(sessionStorage.getItem("progress")) || {};
 
-      // Render questions dynamically with div wrapper
-      for (let i = 0; i < questions.length; i++) {
-        const q = questions[i];
-
-        const questionContainer = document.createElement("div");
+      // Render questions dynamically
+      questions.forEach((q, i) => {
+        const questionContainer = document.createElement("div"); // wrap each question
         questionContainer.classList.add("question-container");
 
         const h2 = document.createElement("h2");
-       h2.textContent = q.question;
+        h2.textContent = q.question; // exact question text for Cypress
         questionContainer.appendChild(h2);
 
-        q.choices.forEach((choice) => {
+        q.choices.forEach(choice => {
           const label = document.createElement("label");
           label.innerHTML = `
             <input type="radio" name="question${i}" value="${choice}">
@@ -48,48 +46,50 @@
         });
 
         questionDiv.appendChild(questionContainer);
-      }
-
-      // Restore checked radios and save progress
-      document.querySelectorAll('input[type="radio"]').forEach((radio) => {
-        const progress = JSON.parse(sessionStorage.getItem("progress")) || {};
-        if (progress[radio.name] === radio.value) {
-  radio.checked = true;
-  radio.setAttribute("checked", "checked"); // ensures Cypress sees it
-}
-
-        radio.addEventListener("change", (e) => {
-  const question = e.target.name;
-  const answer = e.target.value;
-  const progress = JSON.parse(sessionStorage.getItem("progress")) || {};
-  progress[question] = answer;
-  sessionStorage.setItem("progress", JSON.stringify(progress));
-
-  // Also explicitly set attribute for Cypress
-  e.target.setAttribute("checked", "checked");
-});
       });
 
-      // Submit and calculate score
+      // Restore checked radios and save progress
+      document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        const progress = JSON.parse(sessionStorage.getItem("progress")) || {};
+        if (progress[radio.name] === radio.value) {
+          radio.checked = true;
+          radio.setAttribute("checked", "true"); // ensure Cypress sees it
+        }
+
+        radio.addEventListener("change", (e) => {
+          const question = e.target.name;
+          const answer = e.target.value;
+
+          const progress = JSON.parse(sessionStorage.getItem("progress")) || {};
+          progress[question] = answer;
+          sessionStorage.setItem("progress", JSON.stringify(progress));
+
+          // also set checked attribute for Cypress
+          document.querySelectorAll(`input[name="${question}"]`).forEach(r => r.removeAttribute("checked"));
+          e.target.setAttribute("checked", "true");
+        });
+      });
+
+      // Submit button
       submit.addEventListener("click", () => {
         const progress = JSON.parse(sessionStorage.getItem("progress")) || {};
         let totalScore = 0;
 
         for (let i = 0; i < questions.length; i++) {
-          const q = `question${i}`;
-          if (progress[q] === questions[i].answer) totalScore++;
+          const qKey = `question${i}`;
+          if (progress[qKey] === questions[i].answer) totalScore++;
         }
 
         localStorage.setItem("score", totalScore);
         scoreElement.textContent = `Your score is ${totalScore} out of ${questions.length}`;
       });
 
-      // Restore score from localStorage
+      // Restore score if exists
       const savedScore = localStorage.getItem("score");
       if (savedScore !== null) {
         scoreElement.textContent = `Your score is ${savedScore} out of ${questions.length}`;
-      } 
+      }
     });
   </script>
-</body> 
+</body>
 </html>
