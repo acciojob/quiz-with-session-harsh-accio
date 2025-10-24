@@ -35,7 +35,7 @@
         questionContainer.classList.add("question-container");
 
         const h2 = document.createElement("h2");
-        h2.textContent = `${i + 1}. ${q.question}`;
+       h2.textContent = q.question;
         questionContainer.appendChild(h2);
 
         q.choices.forEach((choice) => {
@@ -53,17 +53,21 @@
       // Restore checked radios and save progress
       document.querySelectorAll('input[type="radio"]').forEach((radio) => {
         const progress = JSON.parse(sessionStorage.getItem("progress")) || {};
-        if (progress[radio.name] === radio.value) radio.checked = true;
+        if (progress[radio.name] === radio.value) {
+  radio.checked = true;
+  radio.setAttribute("checked", "checked"); // ensures Cypress sees it
+}
 
         radio.addEventListener("change", (e) => {
-          const question = e.target.name;
-          const answer = e.target.value;
+  const question = e.target.name;
+  const answer = e.target.value;
+  const progress = JSON.parse(sessionStorage.getItem("progress")) || {};
+  progress[question] = answer;
+  sessionStorage.setItem("progress", JSON.stringify(progress));
 
-          const progress = JSON.parse(sessionStorage.getItem("progress")) || {};
-          progress[question] = answer;
-
-          sessionStorage.setItem("progress", JSON.stringify(progress));
-        });
+  // Also explicitly set attribute for Cypress
+  e.target.setAttribute("checked", "checked");
+});
       });
 
       // Submit and calculate score
